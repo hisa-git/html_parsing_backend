@@ -7,11 +7,14 @@ import time
 from htmltags import HTML_TAGS
 from wordsanalyze import analyze_text_content
 from scraprobots import scrap_robots
+from scrapsitemap import get_sitemap
+import re
+
 app = FastAPI(title="SEO Analyzer API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000","https://html-reader-frontend.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,7 +25,6 @@ class UrlRequest(BaseModel):
 
 @app.get("/")
 def root():
-    """Проверка работоспособности сервера"""
     return {"message": "SEO Analyzer API работает!", "status": "online"}
 
 @app.get("/health")
@@ -92,7 +94,7 @@ def analyze_url(request: UrlRequest):
         print(f"📝 Description найден: {description[:100]}...")
         
         tag_counts = {}
-        important_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'img', 'a', 'div', 'meta']
+        important_tags = HTML_TAGS
         
         for tag in important_tags:
             count = len(soup.find_all(tag))
@@ -103,17 +105,19 @@ def analyze_url(request: UrlRequest):
         images = soup.find_all('img')
         images_without_alt = [img for img in images if not img.get('alt') or not img.get('alt').strip()]
         
-        print(f"🖼️  Изображений всего: {len(images)}, без alt: {len(images_without_alt)}")
+        print(f"Изображений всего: {len(images)}, без alt: {len(images_without_alt)}")
         
         content_analysis = analyze_text_content(soup)
         
-        print(f"🔤 Найдено ключевых слов: {len(content_analysis['top_keywords'])}")
+        print(f"Найдено ключевых слов: {len(content_analysis['top_keywords'])}")
         
         og_title = soup.find('meta', property='og:title')
         og_description = soup.find('meta', property='og:description')
         og_image = soup.find('meta', property='og:image')
         
         canonical = soup.find('link', rel='canonical')
+        robots_content = scrap_robots(request.url)
+        sitemap = get_sitemap(request.url)
         
         return {
             "url": request.url,
@@ -152,7 +156,8 @@ def analyze_url(request: UrlRequest):
                 "content_encoding": response.headers.get('content-encoding', ''),
                 "server": response.headers.get('server', ''),
                 "detected_encoding": encoding,
-                "robots": scrap_robots(request.url)
+                "robots": robots_content,
+                "sitemap": sitemap
             }
         }
         
@@ -163,7 +168,7 @@ def analyze_url(request: UrlRequest):
     except requests.exceptions.RequestException as e:
         return {"error": f"Ошибка запроса: {str(e)}"}
     except Exception as e:
-        print(f"❌ Неожиданная ошибка: {str(e)}")
+        print(f"Неожиданная ошибка: {str(e)}")
         import traceback
         traceback.print_exc()
         return {"error": f"Ошибка парсинга: {str(e)}"}
@@ -171,8 +176,8 @@ def analyze_url(request: UrlRequest):
     
 if __name__ == "__main__":
     import uvicorn
-    print("🚀 Запуск SEO Analyzer API сервера...")
-    print("📍 Сервер будет доступен по адресу: http://localhost:8000")
-    print("📖 Документация API: http://localhost:8000/docs")
-    print("❤️  Health check: http://localhost:8000/health")
+    print("Запуск SEO Analyzer API сервера...")
+    print("Сервер будет доступен по адресу: http://localhost:8000")
+    print("Документация API: http://localhost:8000/docs")
+    print("Health check: http://localhost:8000/health")
     uvicorn.run("index:app", host="0.0.0.0", port=8000, reload=True)
