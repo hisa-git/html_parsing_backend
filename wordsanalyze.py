@@ -109,7 +109,6 @@ def analyze_text_content(soup) -> Dict:
         return {
             'word_count': len(text_content.split()),
             'char_count': len(text_content),
-            'top_keywords': [],
             'keyword_density': [],
             'language': 'unknown',
             'unique_words': 0
@@ -130,7 +129,6 @@ def analyze_text_content(soup) -> Dict:
     return {
         'word_count': total_words,
         'char_count': len(text_content),
-        'top_keywords': [{'word': word, 'count': count} for word, count in word_frequency],
         'keyword_density': keyword_density,
         'language': detect_language(text_content),
         'unique_words': unique_words

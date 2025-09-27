@@ -109,7 +109,7 @@ def analyze_url(request: UrlRequest):
         
         content_analysis = analyze_text_content(soup)
         
-        print(f"Найдено ключевых слов: {len(content_analysis['top_keywords'])}")
+        print(f"Найдено ключевых слов: {len(content_analysis['keyword_density'])}")
         
         og_title = soup.find('meta', property='og:title')
         og_description = soup.find('meta', property='og:description')
@@ -146,7 +146,6 @@ def analyze_url(request: UrlRequest):
                 "char_count": content_analysis['char_count'],
                 "unique_words": content_analysis['unique_words'],
                 "language": content_analysis['language'],
-                "top_keywords": content_analysis['top_keywords'],
                 "keyword_density": content_analysis['keyword_density']
             },
             "technical": {
